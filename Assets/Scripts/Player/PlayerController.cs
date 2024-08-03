@@ -8,6 +8,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float rotationSpeed;
     [SerializeField] private float xInput;
     [SerializeField] private float yInput;
+    [SerializeField] private float rayDistance;
+
+    [SerializeField] private RaycastHit2D ray;
+
+    [SerializeField] private GameObject point;
 
     [SerializeField] private bool useDebugInputs;
     [SerializeField] private bool hasTarget = false;
@@ -27,16 +32,22 @@ public class PlayerController : MonoBehaviour
         MovementAndRotation();
     }
 
-    //Store all components 
+    //Stores all components 
     private void InitalizePlayer()
     {
         myRB = GetComponent<Rigidbody2D>();
+        
     }
 
     #region inputs
     private void GetInput()
     {
         AxisInput();
+
+        if (Input.GetKeyUp(KeyCode.Mouse0))
+        {
+            Interact();
+        }
 
         DebugInputs(useDebugInputs);
     }
@@ -51,6 +62,8 @@ public class PlayerController : MonoBehaviour
     private void DebugInputs(bool active)
     {
         if (!active) { return; }
+
+        
 
         if (Input.GetKeyUp(KeyCode.Q))
         {
@@ -117,4 +130,23 @@ public class PlayerController : MonoBehaviour
         }
     }
     #endregion
+
+    private void Interact()
+    {
+        ray = Physics2D.Raycast(point.transform.position, Vector2.up);
+        GameObject hit = ray.collider.gameObject;
+
+        Debug.Log(hit);
+
+        if (hit != null)
+        {
+            switch (hit.tag)
+            {
+                case "Enemy":
+                    hit.GetComponent<EnemyController>().GetComponent<EnemyController>().TakeDamage();
+                    break;
+            }
+        }
+    }
+
 }

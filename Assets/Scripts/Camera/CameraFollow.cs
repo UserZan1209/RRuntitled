@@ -4,9 +4,11 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private Camera cam;
     [SerializeField] private GameObject playerObject;
 
+    [Header("Modifyers")]
     [SerializeField] private float followSpeed;
 
     [SerializeField] private bool canFollow = false;
@@ -30,6 +32,7 @@ public class CameraFollow : MonoBehaviour
         }
     }
 
+    //A recursive loop to make sure the player is always being searched for if the player object variable is null
     private void FindPlayer()
     {
         playerObject = GameObject.FindGameObjectWithTag("Player");
