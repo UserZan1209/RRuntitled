@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] private Character chr;
+
     [SerializeField] private float moveSpeed;
     [SerializeField] private float rotationSpeed;
     [SerializeField] private float xInput;
@@ -36,6 +38,10 @@ public class PlayerController : MonoBehaviour
     private void InitalizePlayer()
     {
         myRB = GetComponent<Rigidbody2D>();
+
+        chr = new Character();
+        chr.Object = gameObject; // change to body (Need Assets)
+        chr.Health = 100;
         
     }
 
@@ -43,6 +49,7 @@ public class PlayerController : MonoBehaviour
     private void GetInput()
     {
         AxisInput();
+        CheckStatus();
 
         if (Input.GetKeyUp(KeyCode.Mouse0))
         {
@@ -61,19 +68,32 @@ public class PlayerController : MonoBehaviour
     #region debug-inputs
     private void DebugInputs(bool active)
     {
+        /*
+         For debug purposes for testing that needs additonal function
+         */
         if (!active) { return; }
-
-        
 
         if (Input.GetKeyUp(KeyCode.Q))
         {
             hasTarget = !hasTarget;
+        }
+        if (Input.GetKeyUp(KeyCode.O))
+        {
+            chr.ChangeHealthValue(-10);
+            Debug.Log(chr.Health);
         }
     }
     
     #endregion
 
     #endregion
+
+    private void CheckStatus()
+    {
+        #region update-UI
+        DebugCanvasController.Instance.SetHealthOnUI(chr.Health);
+        #endregion
+    }
 
     #region movement-rotation
     private void MovementAndRotation()
@@ -143,7 +163,7 @@ public class PlayerController : MonoBehaviour
             switch (hit.tag)
             {
                 case "Enemy":
-                    hit.GetComponent<EnemyController>().GetComponent<EnemyController>().TakeDamage();
+                    hit.GetComponent<EnemyController>().GetComponent<EnemyController>().TakeDamage(chr.baseAttack);
                     break;
             }
         }
