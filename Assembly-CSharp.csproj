@@ -63,9 +63,14 @@
     <Compile Include="Assets\Scripts\Character\Character.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerController.cs" />
     <Compile Include="Assets\Scripts\Camera\CameraFollow.cs" />
+    <Compile Include="Assets\Scripts\UserInterfaces\PlayerUserInterFace.cs" />
+    <Compile Include="Assets\Scripts\World\Bonfires.cs" />
     <Compile Include="Assets\Scripts\UserInterfaces\MainMenuController.cs" />
     <Compile Include="Assets\Scripts\Character\EnemyController.cs" />
+    <Compile Include="Assets\Scripts\World\EnemySpawner.cs" />
     <Compile Include="Assets\Scripts\UserInterfaces\DebugCanvasController.cs" />
+    <Compile Include="Assets\Scripts\World\BuildingRenderer.cs" />
+    <Compile Include="Assets\Scripts\Combat\DestroyVFX.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerCombat.cs" />
   </ItemGroup>
   <ItemGroup>

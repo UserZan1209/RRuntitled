@@ -1,77 +1,112 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro; 
 
 public class EnemyController : MonoBehaviour
 {
-    [HideInInspector] private Character chr;
+    [HideInInspector] public Character chr;
+    [SerializeField] private Stats stats;
 
     [SerializeField] private float rotationSpeed;
     [SerializeField] private GameObject player;
+    [SerializeField] private Character playersChr;
+    [SerializeField] private Animator anim;
+
+    [SerializeField] private Slider healthSlider;
+    [SerializeField] private TextMeshProUGUI levelText;
+    [SerializeField] private TextMeshProUGUI healthText;
+
+    [SerializeField] private float experienceYeild;
 
     private void Awake()
     {
-        chr = new Character();
-        chr.moveSpeed = 4.0f;
+        int r = Random.Range(1, 6);
+        chr = new Character(r);
+        chr.Renderer = GetComponent<SpriteRenderer>();
+        stats = chr.myStats;
+        stats.moveSpeed = 4.0f;
 
-    
+        levelText.text = stats.Level.ToString();
+        healthText.text = stats.Health.ToString();
+
+        healthSlider.maxValue = stats.Health;
+
+        experienceYeild = stats.Level * 2.5f;
+
+        FindPlayer();
+        playersChr = player.GetComponent<PlayerController>().chr;
+        anim = GetComponent<Animator>();
+    }
+
+    private void FindPlayer()
+    {
+        player = GameObject.FindGameObjectWithTag("Player");
+
+        if(player == null)
+        {
+            FindPlayer();
+        }
     }
 
     private void Update()
     {
-        if(player != null && chr.canMove)
+        anim.SetFloat("healthVal", Mathf.Clamp(chr.myStats.Health, 0, 1));
+        if(chr.myStats.attackDelay > 0)
         {
-            Vector2 movementVector = new Vector2(player.transform.position.x - transform.position.x, player.transform.position.y - transform.position.y);
-            RotateEnemy(movementVector);
+            chr.AttackDelay();
+        }
 
-            /*            if(CheckRange() > 2)
-                        {
+        if (player != null)
+        {
+            MoveEnemy();
+        }
+    }
 
-                        }*/
+    private void MoveEnemy()
+    {
+        float d = Vector3.Distance(transform.position, player.transform.position);
 
-            Vector2 translateVector = new Vector3(player.transform.position.x, transform.position.y);
+        float x = player.transform.position.x - transform.position.x;
+        float y = player.transform.position.y - transform.position.y;
+        Vector2 playerDirection = new Vector2(x, y);
+
+        if(playerDirection == Vector2.zero || d < 2)
+        {
+            anim.SetBool("isMoving", false);
+            if(chr.myStats.attackDelay <= 0)
+            {
+                chr.Attack(player.GetComponent<PlayerController>().chr);
+                player.GetComponent<PlayerController>().TakeDamage();
+            }
+            
+            
+        }
+        else
+        {
+            anim.SetFloat("xInput", playerDirection.x);
+            anim.SetFloat("yInput", playerDirection.y);
+            anim.SetBool("isMoving", true);
+        }
+
+        if (chr.aliveState == AliveState.Alive && CheckRange() > 1.5f)
+        {
+            Vector2 translateVector = player.transform.position - transform.position;
             float magnitude = Mathf.Clamp01(translateVector.magnitude);
             translateVector.Normalize();
-            
-            transform.Translate(chr.moveSpeed * Time.deltaTime * translateVector * magnitude * Vector2.up);
 
-            /*
-             [ToDo]
-
-            +movement
-            +attack
-             */
+            transform.Translate(stats.moveSpeed * Time.deltaTime * translateVector * magnitude);
         }
-    }
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if(collision.tag == "Player")
-        {
-            player = collision.gameObject;
-            chr.canMove = true;
-        }
-    }
-
-    public void RotateEnemy(Vector2 mv)
-    {
-
-        //prevents further code execution if the players position results in a distance of 30 or greater
-        if (CheckRange() >= 30) { player = null; }
-
-        Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, mv);
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-
     }
 
     private float CheckRange()
     {
-        float r = 999;
+        float r = 0;
 
         if(player != null)
         {
             r = Vector3.Distance(transform.position, player.transform.position);
-            //Debug.Log("Range: " + r.ToString());
         }
 
         return r; 
@@ -79,20 +114,32 @@ public class EnemyController : MonoBehaviour
 
     public void TakeDamage(float dm)
     {
-        chr.ChangeHealthValue(dm);
-
-        Debug.Log("Damaged");
-
-        if (!chr.isAlive)
+        if(chr.aliveState == AliveState.Alive)
         {
-            Destroy(gameObject);
-        }
-        else
-        {
-            // React
+            chr.ChangeHealthValue(-dm);
+            healthSlider.value = chr.myStats.Health;
+            healthText.text = chr.myStats.Health.ToString();
+
+            if (chr.myStats.Health <= 0)
+            {
+                player.GetComponent<PlayerController>().GainExp(experienceYeild);
+                anim.SetTrigger("death");
+                chr.KillCharacter();
+            }
+            else
+            {
+                //Animate damage taken
+            }
         }
 
 
+
+    }
+
+    private void LosePlayer()
+    {
+        anim.SetFloat("healthVal", Mathf.Clamp(chr.myStats.Health, 0, 1));
+        chr.canMove = false;
     }
 
 }

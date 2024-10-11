@@ -4,7 +4,12 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private Character chr;
+    [SerializeField] private Vector2 spawnPoint;
+
+    [SerializeField] public Character chr;
+    [SerializeField] private Stats stats;
+
+    [SerializeField] private Animator animator;
 
     [SerializeField] private float moveSpeed;
     [SerializeField] private float rotationSpeed;
@@ -14,35 +19,88 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] private RaycastHit2D ray;
 
-    [SerializeField] private GameObject point;
+    [HideInInspector] private Vector2 mouseWorldPos;
+    [SerializeField] private GameObject LockOnObject;
+    [SerializeField] private GameObject CursorPoint;
+    [SerializeField] private GameObject CursorRef;
+
+    [SerializeField] private GameObject slashVFX;
 
     [SerializeField] private bool useDebugInputs;
-    [SerializeField] private bool hasTarget = false;
+    [SerializeField] private bool useTargetedCombat = false;
 
-    //character.cs ->>
-    [HideInInspector] private Rigidbody2D myRB;
+    [SerializeField] private GameObject activeTarget;
+
+    [SerializeField] private PolygonCollider2D PC2Dcollider;
+    [SerializeField] private CircleCollider2D C2Dcollider;
 
     private void Start()
     {
         InitalizePlayer();
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
         GetInput();
 
-        MovementAndRotation();
+        if (useTargetedCombat) { LockOn(); }
+
+
+        if (stats.Stamina < stats.mStamina && stats.staminaDelay <= 0)
+        {
+            chr.RegenerateStamina();
+            PlayerUserInterFace.instance.UpdateStaminaUI(stats.Stamina);
+        }
+        else
+        {
+            PlayerUserInterFace.instance.UpdateStaminaUI(stats.Stamina);
+            chr.StaminaDelay();
+        }
+
+    }
+
+    private void LockOn()
+    {
+        if (activeTarget != null)
+        {
+            LockOnObject.GetComponent<SpriteRenderer>().enabled = true;
+
+            Vector2 targetPos = new Vector2(activeTarget.transform.position.x, activeTarget.transform.position.y-0.7f);
+            LockOnObject.transform.position = targetPos;
+            CameraFollow.instance.ChangeFollowObject(activeTarget);
+        }
+        else
+        {
+            LockOnObject.GetComponent<SpriteRenderer>().enabled = false;
+            LockOnObject.transform.position = transform.position;
+            CameraFollow.instance.ChangeFollowObject(gameObject);
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        Movement();
     }
 
     //Stores all components 
     private void InitalizePlayer()
     {
-        myRB = GetComponent<Rigidbody2D>();
+        chr = new Character(1);
+        chr.Sprite = gameObject; // change to body (Need Assets)
+        chr.Renderer = GetComponent<SpriteRenderer>();
 
-        chr = new Character();
-        chr.Object = gameObject; // change to body (Need Assets)
-        chr.Health = 100;
-        
+        stats = chr.myStats;
+        //stats.LogStats();   
+
+        chr.myRB = GetComponent<Rigidbody2D>();
+        chr.collider = GetComponent<Collider2D>();
+
+        PlayerUserInterFace.instance.init(chr);
+
+        animator = GetComponent<Animator>();
+
+        CursorRef = Instantiate(CursorPoint, transform.position, Quaternion.identity);
+
     }
 
     #region inputs
@@ -51,9 +109,34 @@ public class PlayerController : MonoBehaviour
         AxisInput();
         CheckStatus();
 
-        if (Input.GetKeyUp(KeyCode.Mouse0))
+        if (Input.GetKeyUp(KeyCode.Mouse0) && stats.Stamina != 0)
         {
             Interact();
+        }
+
+        if (Input.GetKeyUp(KeyCode.Q))
+        {
+            useTargetedCombat = !useTargetedCombat;
+            if (!useTargetedCombat) 
+            {
+                LockOnObject.GetComponent<SpriteRenderer>().enabled = false;
+                LockOnObject.transform.position = transform.position;
+                CameraFollow.instance.ChangeFollowObject(gameObject); 
+            }
+        }
+
+        if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            Roll();
+        }
+        if (Input.GetKeyUp(KeyCode.Space))
+        {
+            //run
+        }
+
+        if (chr.myStats.IFrameTimer > 0)
+        {
+            chr.IFrameCountdown();
         }
 
         DebugInputs(useDebugInputs);
@@ -62,7 +145,12 @@ public class PlayerController : MonoBehaviour
     private void AxisInput()
     {
         xInput = Input.GetAxis("Horizontal");
+        animator.SetFloat("xInput", xInput);
         yInput = Input.GetAxis("Vertical");
+        animator.SetFloat("yInput", yInput);
+        mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        //moves cursor guide
+        CursorRef.transform.transform.position = mouseWorldPos;
     }
 
     #region debug-inputs
@@ -73,14 +161,9 @@ public class PlayerController : MonoBehaviour
          */
         if (!active) { return; }
 
-        if (Input.GetKeyUp(KeyCode.Q))
+        if (Input.GetKeyUp(KeyCode.J))
         {
-            hasTarget = !hasTarget;
-        }
-        if (Input.GetKeyUp(KeyCode.O))
-        {
-            chr.ChangeHealthValue(-10);
-            Debug.Log(chr.Health);
+            GainExp(2);
         }
     }
     
@@ -91,16 +174,28 @@ public class PlayerController : MonoBehaviour
     private void CheckStatus()
     {
         #region update-UI
-        DebugCanvasController.Instance.SetHealthOnUI(chr.Health);
+        DebugCanvasController.Instance.SetHealthOnUI(stats.Health);
         #endregion
     }
 
     #region movement-rotation
-    private void MovementAndRotation()
+    private void Movement()
     {
         #region movement
         //create a vector using the WASD or --> keys to be used for movement and some rotation
         Vector3 movementVector = new Vector3(xInput, 0.0f, yInput);
+
+        if (movementVector == Vector3.zero) 
+        {
+            animator.SetFloat("healthVal", Mathf.Clamp(chr.myStats.Health, 0, 1));
+            animator.SetBool("isMoving", false); 
+
+        }
+        else 
+        {
+            animator.SetBool("isMoving", true); 
+        }
+
         Vector2 mV = new Vector2(xInput, yInput);
         //gets the length of the vector to give movement direction
         float magnitude = Mathf.Clamp01(mV.magnitude);
@@ -109,64 +204,121 @@ public class PlayerController : MonoBehaviour
         //Moves player
         transform.Translate(mV * moveSpeed * magnitude * Time.deltaTime, Space.World);
         #endregion
+    }
 
-        if (!hasTarget)
+    private void Roll()
+    {
+        if(chr.myStats.Stamina > 0)
         {
-            /*
-             =Normal Movement=
-
-            -uses the movement vector to calculate the target rotation while moving, using the transforms forward as the start point
-
-             */
-
-            if (movementVector == Vector3.zero) { return; }
-
-            //Rotate toward target
-            Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, mV);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-
+            animator.SetTrigger("roll");
+            chr.UseIFrames();
+            chr.UseStamina(chr.myStats.mStamina/4);
         }
         else
         {
-            /*
-             =Targeted Movement=
-
-            -Uses the mouse position relative to the world to determine where to look while moving
-
-            - [TODO] When an enemy is attacked set use the enemy as the target to look at
-
-            */
-
-
-            //convert mouse position to the world position
-            Vector3 mousePos = Input.mousePosition;
-            mousePos.z = Camera.main.nearClipPlane;
-            Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(mousePos);
-
-            //Rotate toward target
-            Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, mouseWorldPosition);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, (rotationSpeed * 2.0f) * Time.deltaTime);
-
+            Debug.Log("No stamina");
         }
+
+
     }
+
     #endregion
 
     private void Interact()
     {
-        ray = Physics2D.Raycast(point.transform.position, Vector2.up);
-        GameObject hit = ray.collider.gameObject;
+        //Check click location
+        #region cast-ray
+        //Gets a 2D positon based on where the mouse is when interacting
+        Vector2 targetPos = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
 
-        Debug.Log(hit);
+        //Disable the player collider briefly to prevent the raycast from hitting the player
+/*        chr.collider.enabled = false;
+        PC2Dcollider.enabled = false;
+        C2Dcollider.enabled = false;*/
+        ray = Physics2D.Raycast(transform.position, targetPos);
+/*        chr.collider.enabled = true;
+        PC2Dcollider.enabled = true;
+        C2Dcollider.enabled = true;
+*/
+        //prevent going further if nothing is detected
+        if (ray.collider == null)
+        {
+            return;
+        }
+        GameObject hit = ray.collider.gameObject;
+        #endregion
 
         if (hit != null)
         {
+            #region distance-check
+            //Prevents further code if the selected position is to far
+            float distance = Vector2.Distance( transform.position, mouseWorldPos);
+            if(distance > 3f) 
+            {
+                Debug.Log("Too far");
+                return; 
+            }
+            #endregion
+
+            #region check-for-object-tags
             switch (hit.tag)
             {
                 case "Enemy":
-                    hit.GetComponent<EnemyController>().GetComponent<EnemyController>().TakeDamage(chr.baseAttack);
+                    Debug.Log("Hit registered");
+                    activeTarget = hit.gameObject;
+                    hit.GetComponent<EnemyController>().GetComponent<EnemyController>().TakeDamage(stats.baseAttack);
+
+                    UseStamina(stats.StaminaUseage);
+                    Instantiate(slashVFX, transform.position, Quaternion.identity);
                     break;
             }
+            #endregion
         }
     }
+
+    #region stat-changes
+    public void TakeDamage()
+    {
+        //checks if already dead before damaging
+        if (chr.aliveState != AliveState.Dead)
+        {
+            PlayerUserInterFace.instance.UpdateHealthUI(stats.Health);
+        }
+    }
+
+    private void UseStamina(float staminaUse)
+    {
+        stats.Stamina -= staminaUse;
+        if(stats.Stamina < 0) { stats.Stamina = 0; }
+        PlayerUserInterFace.instance.UpdateStaminaUI(stats.Stamina);
+    }
+
+    public void GainExp(float experience)
+    {
+        stats.AddExp(experience);
+        PlayerUserInterFace.instance.UpdateRequiredExperience(stats.CalculateRequiredExperience());
+
+        if (stats.experiencePoints >= stats.requiredExperiencePoints)
+        {
+            stats.Level++;
+            PlayerUserInterFace.instance.UpdateLevelUI(stats.Level);
+            stats.CalculateStats(stats.Level);
+        }
+
+        PlayerUserInterFace.instance.UpdateEXPUI(stats.experiencePoints);
+    }
+    #endregion
+
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        switch (collision.gameObject.tag)
+        {
+            case "Bonfire":
+                spawnPoint = collision.gameObject.GetComponent<Bonfires>().GetPosition();
+                break;
+        }
+    }
+
 
 }
