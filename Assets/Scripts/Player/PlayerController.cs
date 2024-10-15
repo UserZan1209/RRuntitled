@@ -11,8 +11,6 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] private Animator animator;
 
-    [SerializeField] private float moveSpeed;
-    [SerializeField] private float rotationSpeed;
     [SerializeField] private float xInput;
     [SerializeField] private float yInput;
     [SerializeField] private float rayDistance;
@@ -31,12 +29,11 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] private GameObject activeTarget;
 
-    [SerializeField] private PolygonCollider2D PC2Dcollider;
-    [SerializeField] private CircleCollider2D C2Dcollider;
+    [SerializeField] public Inventory inventory;
 
     private void Start()
     {
-        InitalizePlayer();
+        InitalizePlayer();     
     }
 
     private void Update()
@@ -93,13 +90,16 @@ public class PlayerController : MonoBehaviour
         //stats.LogStats();   
 
         chr.myRB = GetComponent<Rigidbody2D>();
-        chr.collider = GetComponent<Collider2D>();
+        chr.PC2Dcollider = GetComponent<PolygonCollider2D>();
+        chr.C2Dcollider = GetComponent<CircleCollider2D>();
 
         PlayerUserInterFace.instance.init(chr);
 
         animator = GetComponent<Animator>();
+        chr.anim = animator;
 
         CursorRef = Instantiate(CursorPoint, transform.position, Quaternion.identity);
+
 
     }
 
@@ -113,6 +113,10 @@ public class PlayerController : MonoBehaviour
         {
             Interact();
         }
+        if (Input.GetKeyUp(KeyCode.Mouse1) && stats.Stamina != 0)
+        {
+            Parry();
+        }
 
         if (Input.GetKeyUp(KeyCode.Q))
         {
@@ -125,6 +129,10 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        if (Input.GetKeyUp(KeyCode.Tab))
+        {
+            chr.ToggleRun();
+        }
         if (Input.GetKeyUp(KeyCode.LeftShift))
         {
             Roll();
@@ -165,6 +173,8 @@ public class PlayerController : MonoBehaviour
         {
             GainExp(2);
         }
+
+        chr.myStats.isInvincible = true;
     }
     
     #endregion
@@ -202,8 +212,28 @@ public class PlayerController : MonoBehaviour
         mV.Normalize();
 
         //Moves player
-        transform.Translate(mV * moveSpeed * magnitude * Time.deltaTime, Space.World);
+        if (chr.aliveState == AliveState.Alive)
+        {
+            if (chr.myStats.isRunning)
+            {
+                transform.Translate(mV * chr.myStats.moveSpeed*2.5f * magnitude * Time.deltaTime, Space.World);
+            }
+            else
+            {
+                transform.Translate(mV * chr.myStats.moveSpeed * magnitude * Time.deltaTime, Space.World);
+            }
+            
+        }
+        
         #endregion
+    }
+
+    private void Parry()
+    {
+        //needs a cooldown
+        animator.SetTrigger("roll");
+        chr.UseIFrames();
+        
     }
 
     private void Roll()
@@ -231,15 +261,8 @@ public class PlayerController : MonoBehaviour
         //Gets a 2D positon based on where the mouse is when interacting
         Vector2 targetPos = new Vector2(mouseWorldPos.x, mouseWorldPos.y);
 
-        //Disable the player collider briefly to prevent the raycast from hitting the player
-/*        chr.collider.enabled = false;
-        PC2Dcollider.enabled = false;
-        C2Dcollider.enabled = false;*/
         ray = Physics2D.Raycast(transform.position, targetPos);
-/*        chr.collider.enabled = true;
-        PC2Dcollider.enabled = true;
-        C2Dcollider.enabled = true;
-*/
+
         //prevent going further if nothing is detected
         if (ray.collider == null)
         {
@@ -271,6 +294,12 @@ public class PlayerController : MonoBehaviour
                     UseStamina(stats.StaminaUseage);
                     Instantiate(slashVFX, transform.position, Quaternion.identity);
                     break;
+                case "NPC":
+                    DialoogueSystem.instance.OpenDialogueCanvas();
+                    break;
+                default:
+                    Debug.Log("Nothing Important Selected");
+                    break;
             }
             #endregion
         }
@@ -283,6 +312,11 @@ public class PlayerController : MonoBehaviour
         if (chr.aliveState != AliveState.Dead)
         {
             PlayerUserInterFace.instance.UpdateHealthUI(stats.Health);
+        }
+        else
+        {
+            PlayerUserInterFace.instance.UpdateHealthUI(0.0f);
+            DeathScreen.Instance.OpenDeathMenu(gameObject);
         }
     }
 
@@ -309,6 +343,11 @@ public class PlayerController : MonoBehaviour
     }
     #endregion
 
+    public void Respawn()
+    {
+        transform.position = spawnPoint;
+        chr.Revive();
+    }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {

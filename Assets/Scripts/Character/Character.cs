@@ -23,6 +23,7 @@ public class Stats
 
     public bool canHeal;
     public bool isInvincible;
+    public bool isRunning;
 
     /*
         The 'Stats' class is responsable for creating and defining the stats of a character and manage any modifactions to the stats.
@@ -32,7 +33,7 @@ public class Stats
         //Uses the level to generate stats that scale 
         StaminaUseage = 2f;
         Level = level;
-        moveSpeed = 5.0f;
+        moveSpeed = 3.0f;
         experiencePoints = 0.0f;
 
         CalculateStats(level);
@@ -41,6 +42,7 @@ public class Stats
         mStamina = Stamina;
         staminaDelay = 0.0f;
         canHeal = false;
+        isRunning = false;
         isInvincible = false;
         IFrameTime = 1.5f;
         IFrameTimer = 0.0f;
@@ -92,6 +94,7 @@ public class Character
 {
     public GameObject Sprite;
     public SpriteRenderer Renderer;
+    public Animator anim;
     public Stats myStats;
     
     public AliveState aliveState = AliveState.Alive;
@@ -99,14 +102,15 @@ public class Character
 
 
     public Rigidbody2D myRB;
-    public Collider2D collider;
+
+    public PolygonCollider2D PC2Dcollider;
+    public CircleCollider2D C2Dcollider;
 
     public Character(int level)
     {
         myStats = new Stats(level);
         myStats.baseAttack = 2;
         myStats.isInvincible = false;
-
     }
 
     public void ChangeHealthValue(float h)
@@ -124,7 +128,7 @@ public class Character
         }
     }
 
-    public void RegenerateHealth()
+    public void RegenerateHealth() // ONLY PLAYER
     {
         if(myStats.Health < myStats.mHealth)
         {
@@ -136,6 +140,8 @@ public class Character
     public void KillCharacter()
     {
         Renderer.color = Color.grey;
+        anim.SetTrigger("death");
+        aliveState = AliveState.Dead;
     }
 
     public void UseStamina(float usage)
@@ -172,7 +178,8 @@ public class Character
 
             Debug.Log("at: " + myStats.baseAttack.ToString());
 
-            chr.TakeDamage(myStats.baseAttack);
+            if(chr.aliveState != AliveState.Dead) { chr.TakeDamage(myStats.baseAttack); }
+            
         }
     }
 
@@ -199,6 +206,28 @@ public class Character
         if(myStats.IFrameTimer <= 0) { myStats.isInvincible = false;
             Debug.Log("end");
         }
+    }
+
+    public void DisableColliders()
+    {
+        PC2Dcollider.enabled = false;
+        C2Dcollider.enabled = false;
+    }
+
+    public void Revive() // ONLY PLAYER
+    {
+        anim.SetTrigger("revive");
+        aliveState = AliveState.Alive;
+        myStats.Health = myStats.mHealth;
+        PlayerUserInterFace.instance.UpdateHealthUI(myStats.mHealth);
+        myStats.Stamina = myStats.mStamina;
+        PlayerUserInterFace.instance.UpdateStaminaUI(myStats.mHealth);
+        Renderer.color = Color.white;
+    }
+
+    public void ToggleRun()
+    {
+        myStats.isRunning = !myStats.isRunning;
     }
 
 }

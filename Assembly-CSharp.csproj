@@ -60,18 +60,33 @@
     <Analyzer Include="E:\UnityEngine\2022.3.40f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\CRT-Free\Scripts\CRTCameraBehaviour.cs" />
+    <Compile Include="Assets\Scripts\Character\Inventory\Item.cs" />
     <Compile Include="Assets\Scripts\Character\Character.cs" />
+    <Compile Include="Assets\Scripts\Character\Inventory\ItemIndex.cs" />
+    <Compile Include="Assets\Scripts\Character\Inventory\Items\KeyItems.cs" />
+    <Compile Include="Assets\CRT-Free\Scripts\CRTDemoBehaviour.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerController.cs" />
+    <Compile Include="Assets\Scripts\UserInterfaces\DialoogueSystem.cs" />
+    <Compile Include="Assets\CRT-Free\Scripts\CRTDataObject.cs" />
     <Compile Include="Assets\Scripts\Camera\CameraFollow.cs" />
     <Compile Include="Assets\Scripts\UserInterfaces\PlayerUserInterFace.cs" />
     <Compile Include="Assets\Scripts\World\Bonfires.cs" />
+    <Compile Include="Assets\Scripts\Character\NPCController.cs" />
     <Compile Include="Assets\Scripts\UserInterfaces\MainMenuController.cs" />
     <Compile Include="Assets\Scripts\Character\EnemyController.cs" />
+    <Compile Include="Assets\Scripts\Character\Inventory\Items\ItemController.cs" />
+    <Compile Include="Assets\Scripts\Character\Inventory\Inventory.cs" />
     <Compile Include="Assets\Scripts\World\EnemySpawner.cs" />
+    <Compile Include="Assets\Scripts\UserInterfaces\DeathScreen.cs" />
+    <Compile Include="Assets\Scripts\Character\Inventory\Items\ConsumableItem.cs" />
+    <Compile Include="Assets\CRT-Free\Scripts\CRTRenderSettingsObject.cs" />
+    <Compile Include="Assets\Scripts\Character\Inventory\Items\WeaponItem.cs" />
     <Compile Include="Assets\Scripts\UserInterfaces\DebugCanvasController.cs" />
     <Compile Include="Assets\Scripts\World\BuildingRenderer.cs" />
     <Compile Include="Assets\Scripts\Combat\DestroyVFX.cs" />
     <Compile Include="Assets\Scripts\Player\PlayerCombat.cs" />
+    <Compile Include="Assets\Scripts\Character\Inventory\Items\BlankItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
@@ -93,6 +108,7 @@
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF Overlay.shader" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap-Mobile.shader" />
     <None Include="Assets\TextMesh Pro\Fonts\LiberationSans - OFL.txt" />
+    <None Include="Assets\CRT-Free\Materials\CRTUnlit.shader" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile.shader" />
     <None Include="Assets\TextMesh Pro\Shaders\TMP_Sprite.shader" />
   </ItemGroup>

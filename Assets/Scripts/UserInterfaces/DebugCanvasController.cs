@@ -74,7 +74,6 @@ public class DebugCanvasController : MonoBehaviour
 
     public void SetHealthOnUI(float h)
     {
-        if(h <= 0) { SceneManager.LoadScene(0); }
         playerHealthTMP.text = h.ToString();
     }
 

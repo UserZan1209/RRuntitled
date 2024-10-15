@@ -25,19 +25,23 @@ public class EnemyController : MonoBehaviour
         int r = Random.Range(1, 6);
         chr = new Character(r);
         chr.Renderer = GetComponent<SpriteRenderer>();
+        chr.PC2Dcollider = GetComponent<PolygonCollider2D>();
+        chr.C2Dcollider = GetComponent<CircleCollider2D>();
+
         stats = chr.myStats;
-        stats.moveSpeed = 4.0f;
 
         levelText.text = stats.Level.ToString();
         healthText.text = stats.Health.ToString();
 
         healthSlider.maxValue = stats.Health;
+        //healthSlider.gameObject.SetActive(false);
 
-        experienceYeild = stats.Level * 2.5f;
+        experienceYeild = stats.Level * 10f;
 
         FindPlayer();
         playersChr = player.GetComponent<PlayerController>().chr;
         anim = GetComponent<Animator>();
+        chr.anim = anim;
     }
 
     private void FindPlayer()
@@ -58,7 +62,7 @@ public class EnemyController : MonoBehaviour
             chr.AttackDelay();
         }
 
-        if (player != null)
+        if (player != null && chr.aliveState == AliveState.Alive)
         {
             MoveEnemy();
         }
@@ -96,7 +100,15 @@ public class EnemyController : MonoBehaviour
             float magnitude = Mathf.Clamp01(translateVector.magnitude);
             translateVector.Normalize();
 
-            transform.Translate(stats.moveSpeed * Time.deltaTime * translateVector * magnitude);
+            if (stats.isRunning)
+            {
+                transform.Translate(stats.moveSpeed*2.5f * Time.deltaTime * translateVector * magnitude);
+            }
+            else
+            {
+                transform.Translate(stats.moveSpeed * Time.deltaTime * translateVector * magnitude);
+            }
+
         }
     }
 
@@ -124,7 +136,9 @@ public class EnemyController : MonoBehaviour
             {
                 player.GetComponent<PlayerController>().GainExp(experienceYeild);
                 anim.SetTrigger("death");
+                healthSlider.gameObject.SetActive(false);
                 chr.KillCharacter();
+                chr.DisableColliders();
             }
             else
             {
