@@ -61,13 +61,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Library\PackageCache\com.unity.2d.common@8.0.3\Editor\InternalBridge\TexturePlatformSettings\TexturePlatformSettings.cs" />
-    <Compile Include="Library\PackageCache\com.unity.2d.common@8.0.3\Editor\InternalBridge\InternalEditorBridge.cs" />
-    <Compile Include="Library\PackageCache\com.unity.2d.aseprite@1.1.4\Editor\Common\InternalBridge\AssemblyInfo.cs" />
     <Compile Include="Library\PackageCache\com.unity.2d.aseprite@1.1.4\Editor\Common\InternalBridge\TexturePlatformSettings\TexturePlatformSettings.cs" />
     <Compile Include="Library\PackageCache\com.unity.2d.aseprite@1.1.4\Editor\Common\InternalBridge\ModelPreviewer.cs" />
     <Compile Include="Library\PackageCache\com.unity.2d.common@8.0.3\Editor\InternalBridge\AssemblyInfo.cs" />
-    <Compile Include="Library\PackageCache\com.unity.2d.aseprite@1.1.4\Editor\Common\InternalBridge\AnimatorControllerHelper.cs" />
     <Compile Include="Library\PackageCache\com.unity.2d.aseprite@1.1.4\Editor\Common\InternalBridge\InternalEditorBridge.cs" />
+    <Compile Include="Library\PackageCache\com.unity.2d.common@8.0.3\Editor\InternalBridge\InternalEditorBridge.cs" />
+    <Compile Include="Library\PackageCache\com.unity.2d.aseprite@1.1.4\Editor\Common\InternalBridge\AssemblyInfo.cs" />
+    <Compile Include="Library\PackageCache\com.unity.2d.aseprite@1.1.4\Editor\Common\InternalBridge\AnimatorControllerHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Library\PackageCache\com.unity.2d.aseprite@1.1.4\Editor\Common\InternalBridge\InternalBridgeRef.asmref" />

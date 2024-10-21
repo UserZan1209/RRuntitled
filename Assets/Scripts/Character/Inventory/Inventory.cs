@@ -25,6 +25,11 @@ public class Inventory : ScriptableObject
         }
     }
 
+    public void ClearInventory()
+    {
+        Items = new List<InventorySlot>();
+    }
+
 }
 
 [System.Serializable]

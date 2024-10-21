@@ -99,7 +99,7 @@ public class PlayerController : MonoBehaviour
         chr.anim = animator;
 
         CursorRef = Instantiate(CursorPoint, transform.position, Quaternion.identity);
-
+        inventory.ClearInventory();
 
     }
 
@@ -141,6 +141,10 @@ public class PlayerController : MonoBehaviour
         {
             //run
         }
+        if (Input.GetKeyUp(KeyCode.I))
+        {
+            InventoryController.Instance.ToggleInventory();
+        }
 
         if (chr.myStats.IFrameTimer > 0)
         {
@@ -158,7 +162,7 @@ public class PlayerController : MonoBehaviour
         animator.SetFloat("yInput", yInput);
         mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         //moves cursor guide
-        CursorRef.transform.transform.position = mouseWorldPos;
+        
     }
 
     #region debug-inputs
@@ -191,6 +195,7 @@ public class PlayerController : MonoBehaviour
     #region movement-rotation
     private void Movement()
     {
+        CursorRef.transform.transform.position = mouseWorldPos;
         #region movement
         //create a vector using the WASD or --> keys to be used for movement and some rotation
         Vector3 movementVector = new Vector3(xInput, 0.0f, yInput);
@@ -289,7 +294,14 @@ public class PlayerController : MonoBehaviour
                 case "Enemy":
                     Debug.Log("Hit registered");
                     activeTarget = hit.gameObject;
-                    hit.GetComponent<EnemyController>().GetComponent<EnemyController>().TakeDamage(stats.baseAttack);
+                    if (hit.GetComponent<EnemyController>() != null)
+                    {
+                        hit.GetComponent<EnemyController>().TakeDamage(stats.baseAttack);
+                    }
+                    else
+                    {
+                        hit.GetComponent<BossController>().TakeDamage(stats.baseAttack);
+                    }
 
                     UseStamina(stats.StaminaUseage);
                     Instantiate(slashVFX, transform.position, Quaternion.identity);

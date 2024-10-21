@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Test Item
   m_EditorClassIdentifier: 
   itemPrefab: {fileID: 1857550840358770675, guid: 376c8d0c76e4a6741a3bab871a7e104a, type: 3}
+  iconUI: {fileID: 0}
   indexNum: 0
   itemName: Test Item
   itemDescription: I am an Item
-  itemType: 4
+  itemType: 3

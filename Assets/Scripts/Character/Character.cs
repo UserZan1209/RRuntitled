@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public class Stats 
 {
     public float mHealth;
@@ -28,6 +29,7 @@ public class Stats
     /*
         The 'Stats' class is responsable for creating and defining the stats of a character and manage any modifactions to the stats.
      */
+
     public Stats(int level)
     {
         //Uses the level to generate stats that scale 
@@ -50,7 +52,7 @@ public class Stats
 
     public void CalculateStats(float level)
     {
-        Health = 10 * level;
+        Health = 15 * level;
         Stamina = 6 * level;
         baseAttack = 1;
 
@@ -90,6 +92,7 @@ public enum AliveState
 /*
     The 'Character' class is created and defined on the controller of an entity
  */
+[System.Serializable]
 public class Character
 {
     public GameObject Sprite;
@@ -111,6 +114,7 @@ public class Character
         myStats = new Stats(level);
         myStats.baseAttack = 2;
         myStats.isInvincible = false;
+        canMove = false;
     }
 
     public void ChangeHealthValue(float h)
@@ -130,11 +134,13 @@ public class Character
 
     public void RegenerateHealth() // ONLY PLAYER
     {
-        if(myStats.Health < myStats.mHealth)
-        {
-            myStats.Health += Time.deltaTime * 1.5f;
-            PlayerUserInterFace.instance.UpdateHealthUI(myStats.Health);
-        }
+        /*        if(myStats.Health < myStats.mHealth)
+                {
+                    myStats.Health += Time.deltaTime * 1.5f;
+                    PlayerUserInterFace.instance.UpdateHealthUI(myStats.Health);
+                }*/
+
+        myStats.Health = myStats.mHealth;
     }
 
     public void KillCharacter()

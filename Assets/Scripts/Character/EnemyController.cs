@@ -2,8 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; 
+using TMPro;
 
+[System.Serializable]
 public class EnemyController : MonoBehaviour
 {
     [HideInInspector] public Character chr;
@@ -19,6 +20,7 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI healthText;
 
     [SerializeField] private float experienceYeild;
+    [SerializeField] private float detectionRange;
 
     private void Awake()
     {
@@ -29,12 +31,14 @@ public class EnemyController : MonoBehaviour
         chr.C2Dcollider = GetComponent<CircleCollider2D>();
 
         stats = chr.myStats;
+        if(healthSlider != null)
+        {
+            levelText.text = stats.Level.ToString();
+            healthText.text = stats.Health.ToString();
 
-        levelText.text = stats.Level.ToString();
-        healthText.text = stats.Health.ToString();
-
-        healthSlider.maxValue = stats.Health;
-        //healthSlider.gameObject.SetActive(false);
+            healthSlider.maxValue = stats.Health;
+            //healthSlider.gameObject.SetActive(false);
+        }
 
         experienceYeild = stats.Level * 10f;
 
@@ -56,6 +60,8 @@ public class EnemyController : MonoBehaviour
 
     private void Update()
     {
+        Debug.Log(CheckRange());
+
         anim.SetFloat("healthVal", Mathf.Clamp(chr.myStats.Health, 0, 1));
         if(chr.myStats.attackDelay > 0)
         {
@@ -64,7 +70,18 @@ public class EnemyController : MonoBehaviour
 
         if (player != null && chr.aliveState == AliveState.Alive)
         {
-            MoveEnemy();
+            if (chr.canMove)
+            {
+                MoveEnemy();
+            }
+            else if(!chr.canMove && CheckRange() < 11.2f)
+            {
+                anim.SetBool("isMoving", false);
+                chr.Attack(player.GetComponent<PlayerController>().chr);
+                player.GetComponent<PlayerController>().TakeDamage();
+            }
+
+
         }
     }
 
@@ -76,25 +93,11 @@ public class EnemyController : MonoBehaviour
         float y = player.transform.position.y - transform.position.y;
         Vector2 playerDirection = new Vector2(x, y);
 
-        if(playerDirection == Vector2.zero || d < 2)
-        {
-            anim.SetBool("isMoving", false);
-            if(chr.myStats.attackDelay <= 0)
-            {
-                chr.Attack(player.GetComponent<PlayerController>().chr);
-                player.GetComponent<PlayerController>().TakeDamage();
-            }
-            
-            
-        }
-        else
-        {
-            anim.SetFloat("xInput", playerDirection.x);
-            anim.SetFloat("yInput", playerDirection.y);
-            anim.SetBool("isMoving", true);
-        }
+        anim.SetFloat("xInput", playerDirection.x);
+        anim.SetFloat("yInput", playerDirection.y);
+        anim.SetBool("isMoving", true);
 
-        if (chr.aliveState == AliveState.Alive && CheckRange() > 1.5f)
+        if (chr.aliveState == AliveState.Alive && CheckRange() > 2.5f)
         {
             Vector2 translateVector = player.transform.position - transform.position;
             float magnitude = Mathf.Clamp01(translateVector.magnitude);
@@ -119,6 +122,9 @@ public class EnemyController : MonoBehaviour
         if(player != null)
         {
             r = Vector3.Distance(transform.position, player.transform.position);
+
+            if(r > 11.5f && r < 20.0f) { chr.canMove = true; }
+            else {  chr.canMove = false; }
         }
 
         return r; 
